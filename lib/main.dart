@@ -402,18 +402,27 @@ class _PublicationTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 10),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: ListTile(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => PublicationDetailPage(publication: publication),
+            ),
+          );
+        },
         leading: CircleAvatar(
           backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          child: Text('${publication.year ?? '-'}'.substring(0, 2)),
+          child: Text(_yearBadge(publication.year)),
         ),
         title: Text(publication.title),
         subtitle: Text(
           [
+            publication.authors.take(3).join(', '),
             publication.source,
             publication.year?.toString(),
             publication.type,
-          ].whereType<String>().join(' . '),
+          ].whereType<String>().where((value) => value.isNotEmpty).join(' . '),
         ),
+        isThreeLine: publication.authors.isNotEmpty,
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
@@ -423,6 +432,157 @@ class _PublicationTile extends StatelessWidget {
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const Text('cites'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _yearBadge(int? year) {
+    if (year == null) {
+      return '--';
+    }
+    return year.toString().substring(0, 2);
+  }
+}
+
+class PublicationDetailPage extends StatelessWidget {
+  const PublicationDetailPage({super.key, required this.publication});
+
+  final Publication publication;
+
+  @override
+  Widget build(BuildContext context) {
+    final abstractText = publication.abstractText;
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Publication details')),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            Text(
+              publication.title,
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              children: [
+                _DetailChip(
+                  icon: Icons.calendar_month_outlined,
+                  label: publication.year?.toString() ?? 'Year unknown',
+                ),
+                _DetailChip(
+                  icon: Icons.format_quote_outlined,
+                  label: '${publication.citations} citations',
+                ),
+                _DetailChip(
+                  icon: Icons.category_outlined,
+                  label: publication.type,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            _DetailSection(
+              title: 'Authors',
+              icon: Icons.people_outline,
+              child: Text(publication.authorsLabel),
+            ),
+            _DetailSection(
+              title: 'Journal',
+              icon: Icons.menu_book_outlined,
+              child: Text(publication.source),
+            ),
+            _DetailSection(
+              title: 'DOI',
+              icon: Icons.link_outlined,
+              child: SelectableText(
+                publication.doi?.isNotEmpty == true
+                    ? publication.doi!
+                    : 'Not available',
+              ),
+            ),
+            _DetailSection(
+              title: 'Abstract',
+              icon: Icons.article_outlined,
+              child: Text(
+                abstractText?.isNotEmpty == true
+                    ? abstractText!
+                    : 'Abstract not available from OpenAlex for this publication.',
+              ),
+            ),
+            if (publication.openAlexUrl.isNotEmpty)
+              _DetailSection(
+                title: 'OpenAlex',
+                icon: Icons.public_outlined,
+                child: SelectableText(publication.openAlexUrl),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _DetailChip extends StatelessWidget {
+  const _DetailChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Chip(
+      avatar: Icon(icon, size: 18),
+      label: Text(label),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+    );
+  }
+}
+
+class _DetailSection extends StatelessWidget {
+  const _DetailSection({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
+
+  final String title;
+  final IconData icon;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      margin: const EdgeInsets.only(bottom: 12),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: Theme.of(context).colorScheme.primary),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            DefaultTextStyle.merge(
+              style: Theme.of(context).textTheme.bodyLarge,
+              child: child,
+            ),
           ],
         ),
       ),
