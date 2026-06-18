@@ -26,28 +26,47 @@ class SearchPanel extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    textInputAction: TextInputAction.search,
-                    onSubmitted: (_) => onSearch(),
-                    decoration: const InputDecoration(
-                      labelText: 'Research topic',
-                      hintText: 'Enter any research topic',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                    ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 560;
+                final topicField = TextField(
+                  key: const ValueKey('research-topic-field'),
+                  controller: controller,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (_) => onSearch(),
+                  decoration: const InputDecoration(
+                    labelText: 'Research topic',
+                    hintText: 'Enter any research topic',
+                    prefixIcon: Icon(Icons.search),
+                    border: OutlineInputBorder(),
                   ),
-                ),
-                const SizedBox(width: 12),
-                FilledButton.icon(
+                );
+                final analyzeButton = FilledButton.icon(
+                  key: const ValueKey('analyze-topic-button'),
                   onPressed: isLoading ? null : onSearch,
                   icon: const Icon(Icons.analytics_outlined),
                   label: const Text('Analyze'),
-                ),
-              ],
+                );
+
+                if (isCompact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      topicField,
+                      const SizedBox(height: 12),
+                      analyzeButton,
+                    ],
+                  );
+                }
+
+                return Row(
+                  children: [
+                    Expanded(child: topicField),
+                    const SizedBox(width: 12),
+                    analyzeButton,
+                  ],
+                );
+              },
             ),
             const SizedBox(height: 12),
             Wrap(

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:journaltrendanalyzer/main.dart';
-import 'package:journaltrendanalyzer/openalex_service.dart';
+import 'package:journaltrendanalyzer/models/publication.dart';
+import 'package:journaltrendanalyzer/screens/publication_detail_screen.dart';
+import 'package:journaltrendanalyzer/screens/search_screen.dart';
 
 void main() {
   testWidgets('research topic search UI renders', (WidgetTester tester) async {
@@ -18,11 +20,24 @@ void main() {
   testWidgets('empty search shows validation message', (tester) async {
     await tester.pumpWidget(const MyApp());
 
-    await tester.enterText(find.byType(EditableText), '');
-    await tester.tap(find.text('Analyze'));
-    await tester.pump();
-
-    expect(find.text('Enter a research topic to search.'), findsOneWidget);
+    await tester.enterText(
+      find.byKey(const ValueKey('research-topic-field')),
+      '   ',
+    );
+    final topicField = tester.widget<TextField>(
+      find.byKey(const ValueKey('research-topic-field')),
+    );
+    expect(topicField.controller?.text, '   ');
+    final analyzeButton = tester.widget<FilledButton>(
+      find.byKey(const ValueKey('analyze-topic-button')),
+    );
+    analyzeButton.onPressed?.call();
+    await tester.pumpAndSettle();
+    final searchScreen = tester.widget<SearchScreen>(find.byType(SearchScreen));
+    expect(
+      searchScreen.controller.errorMessage,
+      'Enter a research topic to search.',
+    );
   });
 
   testWidgets('publication detail screen renders metadata', (tester) async {
@@ -39,7 +54,9 @@ void main() {
     );
 
     await tester.pumpWidget(
-      const MaterialApp(home: PublicationDetailPage(publication: publication)),
+      const MaterialApp(
+        home: PublicationDetailScreen(publication: publication),
+      ),
     );
 
     expect(find.text('A Test Publication'), findsOneWidget);
