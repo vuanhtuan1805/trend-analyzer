@@ -246,7 +246,7 @@ class _AnalysisResults extends StatelessWidget {
             final isWide = constraints.maxWidth >= 720;
             return GridView.count(
               crossAxisCount: isWide ? 4 : 2,
-              childAspectRatio: isWide ? 2.1 : 1.65,
+              childAspectRatio: isWide ? 2.05 : 1.35,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
               shrinkWrap: true,
@@ -335,18 +335,22 @@ class _MetricTile extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Theme.of(context).colorScheme.primary),
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 22),
+            const SizedBox(height: 8),
             Text(
               value,
               style: Theme.of(
                 context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
+            const SizedBox(height: 2),
             Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
           ],
         ),
