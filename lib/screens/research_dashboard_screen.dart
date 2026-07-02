@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models/research_analysis.dart';
-import '../models/publication.dart';
 import '../state/research_controller.dart';
-import '../widgets/metric_tile.dart';
+import '../widgets/author_contribution_list.dart';
+import '../widgets/journal_contribution_list.dart';
 import '../widgets/publication_tile.dart';
 
 class ResearchDashboardScreen extends StatelessWidget {
@@ -98,78 +98,142 @@ class _DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final topPublication = analysis.publications.isEmpty
-        ? null
-        : analysis.publications.first;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 900
-                ? 4
-                : constraints.maxWidth >= 560
-                ? 2
-                : 1;
-            return GridView.count(
-              crossAxisCount: columns,
-              childAspectRatio: columns == 1 ? 3.2 : 1.55,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                MetricTile(
-                  label: 'Total works',
-                  value: analysis.totalWorks.toString(),
-                  icon: Icons.library_books_outlined,
-                ),
-                MetricTile(
-                  label: 'Loaded sample',
-                  value: analysis.publicationCount.toString(),
-                  icon: Icons.dataset_outlined,
-                ),
-                MetricTile(
-                  label: 'Avg. citations',
-                  value: analysis.averageCitations.toStringAsFixed(1),
-                  icon: Icons.format_quote_outlined,
-                ),
-                MetricTile(
-                  label: 'Busiest year',
-                  value: analysis.busiestYear?.toString() ?? 'N/A',
-                  icon: Icons.calendar_month_outlined,
-                ),
-              ],
-            );
-          },
-        ),
-        const SizedBox(height: 20),
-        _DashboardSummaryCard(
-          analysis: analysis,
-          topPublication: topPublication,
-        ),
+        _DashboardInsights(analysis: analysis),
         const SizedBox(height: 20),
         Text(
-          'Recent top papers',
+          'Most influential publications',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
-        for (final publication in analysis.publications.take(5))
+        for (final publication in analysis.influentialPublications.take(5))
           PublicationTile(publication: publication),
+        if (analysis.journalPublicationCounts.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Text(
+            'Top contributing journals',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          JournalContributionList(
+            journalCounts: analysis.journalPublicationCounts,
+            limit: 6,
+          ),
+        ],
+        if (analysis.authorPublicationCounts.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Text(
+            'Top publishing authors',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          AuthorContributionList(
+            authorCounts: analysis.authorPublicationCounts,
+            limit: 6,
+          ),
+        ],
       ],
     );
   }
 }
 
-class _DashboardSummaryCard extends StatelessWidget {
-  const _DashboardSummaryCard({
-    required this.analysis,
-    required this.topPublication,
-  });
+class _DashboardInsights extends StatelessWidget {
+  const _DashboardInsights({required this.analysis});
 
   final ResearchAnalysis analysis;
-  final Publication? topPublication;
+
+  @override
+  Widget build(BuildContext context) {
+    final topJournal = analysis.topJournal;
+    final topAuthor = analysis.topAuthor;
+    final mostInfluentialPaper = analysis.mostInfluentialPublication;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Key insights',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 1000
+                ? 3
+                : constraints.maxWidth >= 640
+                ? 2
+                : 1;
+
+            return GridView.count(
+              crossAxisCount: columns,
+              childAspectRatio: columns == 1 ? 3.4 : 2.1,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _InsightTile(
+                  icon: Icons.library_books_outlined,
+                  label: 'Total publications',
+                  value: analysis.totalWorks.toString(),
+                ),
+                _InsightTile(
+                  icon: Icons.format_quote_outlined,
+                  label: 'Average citation count',
+                  value: analysis.averageCitations.toStringAsFixed(1),
+                ),
+                _InsightTile(
+                  icon: Icons.calendar_month_outlined,
+                  label: 'Most active publication year',
+                  value: analysis.busiestYear?.toString() ?? 'N/A',
+                ),
+                _InsightTile(
+                  icon: Icons.menu_book_outlined,
+                  label: 'Top journal',
+                  value: topJournal == null
+                      ? 'N/A'
+                      : '${topJournal.key} (${topJournal.value})',
+                ),
+                _InsightTile(
+                  icon: Icons.person_search_outlined,
+                  label: 'Top author',
+                  value: topAuthor == null
+                      ? 'N/A'
+                      : '${topAuthor.key} (${topAuthor.value})',
+                ),
+                _InsightTile(
+                  icon: Icons.workspace_premium_outlined,
+                  label: 'Most influential paper',
+                  value: mostInfluentialPaper?.title ?? 'N/A',
+                  supportingText: mostInfluentialPaper == null
+                      ? null
+                      : '${mostInfluentialPaper.citations} citations',
+                ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _InsightTile extends StatelessWidget {
+  const _InsightTile({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.supportingText,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final String? supportingText;
 
   @override
   Widget build(BuildContext context) {
@@ -177,59 +241,46 @@ class _DashboardSummaryCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        padding: const EdgeInsets.all(14),
+        child: Row(
           children: [
-            Text(
-              'Topic pulse',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _SummaryChip(
-                  icon: Icons.auto_graph_outlined,
-                  label:
-                      '${analysis.publicationsByYear.length} active publication years',
-                ),
-                _SummaryChip(
-                  icon: Icons.event_available_outlined,
-                  label: analysis.newestYear == null
-                      ? 'Newest year unknown'
-                      : 'Newest year ${analysis.newestYear}',
-                ),
-                _SummaryChip(
-                  icon: Icons.workspace_premium_outlined,
-                  label: topPublication == null
-                      ? 'No top paper loaded'
-                      : '${topPublication!.citations} citations on top paper',
-                ),
-              ],
+            Icon(icon, color: Theme.of(context).colorScheme.primary, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    value,
+                    maxLines: supportingText == null ? 2 : 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  if (supportingText != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      supportingText!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ],
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-}
-
-class _SummaryChip extends StatelessWidget {
-  const _SummaryChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Chip(
-      avatar: Icon(icon, size: 18),
-      label: Text(label),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );
   }
 }

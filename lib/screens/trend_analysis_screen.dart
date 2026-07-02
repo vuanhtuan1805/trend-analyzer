@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../models/research_analysis.dart';
 import '../state/research_controller.dart';
+import '../widgets/author_contribution_list.dart';
+import '../widgets/journal_contribution_list.dart';
 import '../widgets/metric_tile.dart';
 import '../widgets/publication_trend_chart.dart';
 
@@ -106,6 +108,28 @@ class _TrendContent extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _YearlyVolumeTable(yearlyCounts: yearlyCounts.reversed.toList()),
+          if (analysis.journalPublicationCounts.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Text(
+              'Journal publication contributors',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            JournalContributionList(
+              journalCounts: analysis.journalPublicationCounts,
+            ),
+          ],
+          if (analysis.authorPublicationCounts.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Text(
+              'Author publication contributors',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 8),
+            AuthorContributionList(
+              authorCounts: analysis.authorPublicationCounts,
+            ),
+          ],
         ],
       ],
     );

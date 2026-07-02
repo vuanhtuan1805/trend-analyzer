@@ -81,11 +81,11 @@ class _SearchScreenState extends State<SearchScreen> {
               const EmptyState()
             else ...[
               Text(
-                'Top cited publications for "${analysis.topic}"',
+                'Most influential publications for "${analysis.topic}"',
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 8),
-              for (final publication in analysis.publications)
+              for (final publication in analysis.influentialPublications)
                 PublicationTile(publication: publication),
             ],
           ],

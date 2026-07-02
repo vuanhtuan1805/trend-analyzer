@@ -36,4 +36,57 @@ class ResearchAnalysis {
   List<MapEntry<int, int>> get chronologicalPublicationCounts =>
       publicationsByYear.entries.toList()
         ..sort((a, b) => a.key.compareTo(b.key));
+
+  List<Publication> get influentialPublications =>
+      publications.toList()..sort((a, b) => b.citations.compareTo(a.citations));
+
+  Publication? get mostInfluentialPublication =>
+      influentialPublications.isEmpty ? null : influentialPublications.first;
+
+  List<MapEntry<String, int>> get journalPublicationCounts {
+    final counts = <String, int>{};
+
+    for (final publication in publications) {
+      final source = publication.source.trim().isEmpty
+          ? 'Unknown source'
+          : publication.source.trim();
+      counts.update(source, (count) => count + 1, ifAbsent: () => 1);
+    }
+
+    return counts.entries.toList()..sort((a, b) {
+      final countComparison = b.value.compareTo(a.value);
+      if (countComparison != 0) {
+        return countComparison;
+      }
+      return a.key.compareTo(b.key);
+    });
+  }
+
+  MapEntry<String, int>? get topJournal =>
+      journalPublicationCounts.isEmpty ? null : journalPublicationCounts.first;
+
+  List<MapEntry<String, int>> get authorPublicationCounts {
+    final counts = <String, int>{};
+
+    for (final publication in publications) {
+      for (final author in publication.authors) {
+        final name = author.trim();
+        if (name.isEmpty) {
+          continue;
+        }
+        counts.update(name, (count) => count + 1, ifAbsent: () => 1);
+      }
+    }
+
+    return counts.entries.toList()..sort((a, b) {
+      final countComparison = b.value.compareTo(a.value);
+      if (countComparison != 0) {
+        return countComparison;
+      }
+      return a.key.compareTo(b.key);
+    });
+  }
+
+  MapEntry<String, int>? get topAuthor =>
+      authorPublicationCounts.isEmpty ? null : authorPublicationCounts.first;
 }

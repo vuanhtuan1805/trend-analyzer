@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../models/research_analysis.dart';
+import 'author_contribution_list.dart';
+import 'journal_contribution_list.dart';
 import 'metric_tile.dart';
 import 'publication_tile.dart';
 import 'publication_trend_chart.dart';
@@ -70,12 +72,34 @@ class AnalysisResults extends StatelessWidget {
           const SizedBox(height: 20),
         ],
         Text(
-          'Top cited publications',
+          'Most influential publications',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 8),
-        for (final publication in analysis.publications.take(8))
+        for (final publication in analysis.influentialPublications.take(8))
           PublicationTile(publication: publication),
+        if (analysis.journalPublicationCounts.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Text(
+            'Top contributing journals',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          JournalContributionList(
+            journalCounts: analysis.journalPublicationCounts,
+          ),
+        ],
+        if (analysis.authorPublicationCounts.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Text(
+            'Top publishing authors',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 8),
+          AuthorContributionList(
+            authorCounts: analysis.authorPublicationCounts,
+          ),
+        ],
       ],
     );
   }
